@@ -5,14 +5,8 @@ import { Notify } from 'notiflix/build/notiflix-notify-aio';
 const startBtnRef = document.querySelector('[data-start]');
 const timerRef = document.querySelector('.timer');
 
-const notifyOptions = {
-  position: 'center-center',
-  backOverlay: true,
-  clickToClose: true,
-};
-
 let deadTime = null;
-let delta = null;
+let deltaTime = null;
 
 const options = {
   enableTime: true,
@@ -21,37 +15,39 @@ const options = {
   minuteIncrement: 1,
 
   onClose(selectedDates) {
-    deadTime = selectedDates[0];
-    console.log(deadTime);
-    if (deadTime - new Date() <= 0) {
-      Notify.failure('Please choose a date in the future!', notifyOptions);
+    if (selectedDates[0] - new Date() <= 0) {
+      Notify.failure('Please choose a date in the future!');
       startBtnRef.disabled = true;
       return;
     }
     startBtnRef.disabled = false;
+    deadTime = selectedDates[0];
+    console.log(deadTime);
   },
 };
-
-flatpickr('#datetime-picker', options);
 
 startBtnRef.addEventListener('click', () => {
   timer.start(timerRef, deadTime);
 });
+
+flatpickr('#datetime-picker', options);
 
 const timer = {
   timerId: null,
   refs: {},
 
   start(rootSelector, deadline) {
-    delta = deadline.getTime() - Date.now();
-    console.log(delta);
     this.getRefs(rootSelector);
+    Notify.success('Congratulations! The countdown has begun!');
     this.timerId = setInterval(() => {
-      if (delta <= 1000) {
+      deltaTime = deadline.getTime() - Date.now();
+
+      startBtnRef.disabled = true;
+      if (deltaTime <= 1000) {
         clearInterval(this.timerId);
-        Notify.success('Дедлайн настав!', notifyOptions);
+        Notify.success('Congratulations! The date has come!!');
       }
-      const data = this.convertMs(delta);
+      const data = this.convertMs(deltaTime);
       console.log(data);
       Object.entries(data).forEach(([name, value]) => {
         this.refs[name].textContent = this.addLeadingZero(value);
